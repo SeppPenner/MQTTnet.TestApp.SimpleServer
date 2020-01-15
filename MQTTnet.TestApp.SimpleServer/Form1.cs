@@ -17,9 +17,6 @@
 
     public partial class Form1 : Form
     {
-
-        private readonly Timer timer;
-
         private IManagedMqttClient managedMqttClientPublisher;
 
         private IManagedMqttClient managedMqttClientSubscriber;
@@ -32,11 +29,12 @@
         {
             this.InitializeComponent();
 
-            this.timer = new Timer
+            var timer = new Timer
             {
                 AutoReset = true, Enabled = true, Interval = 1000
             };
-            this.timer.Elapsed += this.Timer_Elapsed;
+
+            timer.Elapsed += this.Timer_Elapsed;
         }
 
         private static void OnPublisherConnected(MqttClientConnectedEventArgs x)
@@ -186,7 +184,7 @@
 
         private void TextBoxPort_TextChanged(object sender, EventArgs e)
         {
-            if (int.TryParse(this.TextBoxPort.Text, out var p))
+            if (int.TryParse(this.TextBoxPort.Text, out _))
             {
                 this.port = this.TextBoxPort.Text.Trim();
             }
