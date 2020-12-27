@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Form1.cs" company="Haemmer Electronics">
+// <copyright file="Form1.cs" company="Hämmer Electronics">
 //   Copyright (c) 2020 All rights reserved.
 // </copyright>
 // <summary>
@@ -70,6 +70,7 @@ namespace MQTTnet.TestApp.SimpleServer
         /// <param name="x">The MQTT client connected event args.</param>
         private static void OnPublisherConnected(MqttClientConnectedEventArgs x)
         {
+            // ReSharper disable LocalizableElement
             MessageBox.Show("Connected", "ConnectHandler", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -79,6 +80,7 @@ namespace MQTTnet.TestApp.SimpleServer
         /// <param name="x">The MQTT client disconnected event args.</param>
         private static void OnPublisherDisconnected(MqttClientDisconnectedEventArgs x)
         {
+            // ReSharper disable LocalizableElement
             MessageBox.Show("Disconnected", "ConnectHandler", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -240,7 +242,7 @@ namespace MQTTnet.TestApp.SimpleServer
 
             this.managedMqttClientSubscriber = new MqttFactory().CreateManagedMqttClient();
             this.managedMqttClientSubscriber.UseApplicationMessageReceivedHandler(this.HandleReceivedApplicationMessage);
-            await this.managedMqttClientSubscriber.SubscribeAsync(new TopicFilterBuilder().WithTopic(this.TextBoxTopic.Text.Trim()).Build());
+            await this.managedMqttClientSubscriber.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(this.TextBoxTopic.Text.Trim()).Build());
             await this.managedMqttClientSubscriber.StartAsync(options);
         }
 
