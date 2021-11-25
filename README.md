@@ -2,7 +2,7 @@ MQTTnet.TestApp.SimpleServer
 ====================================
 
 MQTTnet.TestApp.SimpleServer is a test application to test [MQTTnet](https://github.com/chkr1011/MQTTnet).
-The assembly was written and tested in .Net 5.0 and originally created by [@grammyleung](https://github.com/grammyleung).
+The assembly was originally created by [@grammyleung](https://github.com/grammyleung).
 
 [![Build status](https://ci.appveyor.com/api/projects/status/1j2g0x4y6xahj3pe?svg=true)](https://ci.appveyor.com/project/SeppPenner/mqttnet-testapp-simpleserver)
 [![GitHub issues](https://img.shields.io/github/issues/SeppPenner/MQTTnet.TestApp.SimpleServer.svg)](https://github.com/SeppPenner/MQTTnet.TestApp.SimpleServer/issues)
