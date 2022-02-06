@@ -32,17 +32,17 @@ namespace MQTTnet.TestApp.SimpleServer
         /// <summary>
         /// The managed publisher client.
         /// </summary>
-        private IManagedMqttClient managedMqttClientPublisher;
+        private IManagedMqttClient? managedMqttClientPublisher;
 
         /// <summary>
         /// The managed subscriber client.
         /// </summary>
-        private IManagedMqttClient managedMqttClientSubscriber;
+        private IManagedMqttClient? managedMqttClientSubscriber;
 
         /// <summary>
         /// The MQTT server.
         /// </summary>
-        private IMqttServer mqttServer;
+        private IMqttServer? mqttServer;
 
         /// <summary>
         /// The port.
@@ -70,7 +70,6 @@ namespace MQTTnet.TestApp.SimpleServer
         /// <param name="x">The MQTT client connected event args.</param>
         private static void OnPublisherConnected(MqttClientConnectedEventArgs x)
         {
-            // ReSharper disable LocalizableElement
             MessageBox.Show("Connected", "ConnectHandler", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -80,7 +79,6 @@ namespace MQTTnet.TestApp.SimpleServer
         /// <param name="x">The MQTT client disconnected event args.</param>
         private static void OnPublisherDisconnected(MqttClientDisconnectedEventArgs x)
         {
-            // ReSharper disable LocalizableElement
             MessageBox.Show("Disconnected", "ConnectHandler", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
