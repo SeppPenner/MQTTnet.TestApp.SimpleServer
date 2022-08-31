@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.TestApp.SimpleServer
+namespace MQTTnet.TestApp.SimpleServer
 {
 	partial class Form1
 	{
