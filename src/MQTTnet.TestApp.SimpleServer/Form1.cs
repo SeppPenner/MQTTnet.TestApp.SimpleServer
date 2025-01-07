@@ -9,22 +9,20 @@
 
 namespace MQTTnet.TestApp.SimpleServer;
 
-using MQTTnet.Extensions.ManagedClient;
-
 /// <summary>
 /// The main form.
 /// </summary>
 public partial class Form1 : Form
 {
     /// <summary>
-    /// The managed publisher client.
+    /// The publisher client.
     /// </summary>
-    private IManagedMqttClient? managedMqttClientPublisher;
+    private IMqttClient? mqttClientPublisher;
 
     /// <summary>
-    /// The managed subscriber client.
+    /// The subscriber client.
     /// </summary>
-    private IManagedMqttClient? managedMqttClientSubscriber;
+    private IMqttClient? mqttClientSubscriber;
 
     /// <summary>
     /// The MQTT server.
@@ -78,7 +76,7 @@ public partial class Form1 : Form
     /// <param name="e">The event args.</param>
     private void ButtonGeneratePublishedMessage_Click(object sender, EventArgs e)
     {
-        var message = $"{{\"dt\":\"{DateTime.Now.ToLongDateString()} {DateTime.Now.ToLongTimeString()}\"}}";
+        var message = $"{{\"dt\":\"{DateTimeOffset.Now:G} {DateTimeOffset.Now:G}\"}}";
         this.TextBoxPublish.Text = message;
     }
 
@@ -96,9 +94,9 @@ public partial class Form1 : Form
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(this.TextBoxTopic.Text.Trim()).WithPayload(payload).WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).WithRetainFlag().Build();
 
-            if (this.managedMqttClientPublisher != null)
+            if (this.mqttClientPublisher is not null)
             {
-                await this.managedMqttClientPublisher.EnqueueAsync(message);
+                await this.mqttClientPublisher.PublishAsync(message);
             }
         }
         catch (Exception ex)
@@ -114,7 +112,7 @@ public partial class Form1 : Form
     /// <param name="e">The event args.</param>
     private async void ButtonPublisherStart_Click(object sender, EventArgs e)
     {
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         var tlsOptions = new MqttClientTlsOptions
         {
@@ -124,36 +122,34 @@ public partial class Form1 : Form
             AllowUntrustedCertificates = true
         };
 
-        var options = new MqttClientOptions
-        {
-            ClientId = "ClientPublisher",
-            ProtocolVersion = MqttProtocolVersion.V311,
-            ChannelOptions = new MqttClientTcpOptions
-            {
-                Server = "localhost",
-                Port = int.Parse(this.TextBoxPort.Text.Trim()),
-                TlsOptions = tlsOptions
-            }
-        };
+        var options = new MqttClientOptionsBuilder()
+           .WithClientId("ClientPublisher")
+           .WithTcpServer("localhost", int.Parse(this.TextBoxPort.Text.Trim()))
+           .WithProtocolVersion(MqttProtocolVersion.V311)
+           .WithTlsOptions(tlsOptions)
+           .WithCleanSession()
+           .WithKeepAlivePeriod(TimeSpan.FromSeconds(5))
+           .Build();
 
-        if (options.ChannelOptions == null)
+        if (options.ChannelOptions is null)
         {
             throw new InvalidOperationException();
         }
 
-        options.CleanSession = true;
-        options.KeepAlivePeriod = TimeSpan.FromSeconds(5);
+        this.mqttClientSubscriber = new MqttClientFactory().CreateMqttClient();
+        this.mqttClientSubscriber.ApplicationMessageReceivedAsync += this.HandleReceivedApplicationMessage;
+        var mqttFilter = new MqttTopicFilterBuilder().WithTopic(this.TextBoxTopic.Text.Trim()).Build();
+        var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
+            .WithTopicFilter(mqttFilter)
+            .Build();
+        await this.mqttClientSubscriber.SubscribeAsync(subscribeOptions);
+        await this.mqttClientSubscriber.ConnectAsync(options);
 
-        this.managedMqttClientPublisher = mqttFactory.CreateManagedMqttClient();
-        this.managedMqttClientPublisher.ApplicationMessageReceivedAsync += this.HandleReceivedApplicationMessage;
-        this.managedMqttClientPublisher.ConnectedAsync += OnPublisherConnected;
-        this.managedMqttClientPublisher.DisconnectedAsync += OnPublisherDisconnected;
-
-        await this.managedMqttClientPublisher.StartAsync(
-            new ManagedMqttClientOptions
-            {
-                ClientOptions = options
-            });
+        this.mqttClientPublisher = mqttFactory.CreateMqttClient();
+        this.mqttClientPublisher.ApplicationMessageReceivedAsync += this.HandleReceivedApplicationMessage;
+        this.mqttClientPublisher.ConnectedAsync += OnPublisherConnected;
+        this.mqttClientPublisher.DisconnectedAsync += OnPublisherDisconnected;
+        await this.mqttClientPublisher.ConnectAsync(options);
     }
 
     /// <summary>
@@ -161,15 +157,15 @@ public partial class Form1 : Form
     /// </summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
-    private async void ButtonPublisherStop_Click(object sender, EventArgs e)
+    private void ButtonPublisherStop_Click(object sender, EventArgs e)
     {
-        if (this.managedMqttClientPublisher == null)
+        if (this.mqttClientPublisher is null)
         {
             return;
         }
 
-        await this.managedMqttClientPublisher.StopAsync();
-        this.managedMqttClientPublisher = null;
+        this.mqttClientPublisher.Dispose();
+        this.mqttClientPublisher = null;
     }
 
     /// <summary>
@@ -179,7 +175,7 @@ public partial class Form1 : Form
     /// <param name="e">The event args.</param>
     private async void ButtonServerStart_Click(object sender, EventArgs e)
     {
-        if (this.mqttServer != null)
+        if (this.mqttServer is not null)
         {
             return;
         }
@@ -187,7 +183,7 @@ public partial class Form1 : Form
         var options = new MqttServerOptions();
         options.DefaultEndpointOptions.Port = int.Parse(this.TextBoxPort.Text);
         options.EnablePersistentSessions = true;
-        this.mqttServer = new MqttFactory().CreateMqttServer(options);
+        this.mqttServer = new MqttServerFactory().CreateMqttServer(options);
 
         try
         {
@@ -208,7 +204,7 @@ public partial class Form1 : Form
     /// <param name="e">The event args.</param>
     private async void ButtonServerStop_Click(object sender, EventArgs e)
     {
-        if (this.mqttServer == null)
+        if (this.mqttServer is null)
         {
             return;
         }
@@ -224,14 +220,31 @@ public partial class Form1 : Form
     /// <param name="e">The event args.</param>
     private async void ButtonSubscriberStart_Click(object sender, EventArgs e)
     {
-        var options = new ManagedMqttClientOptionsBuilder().WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
-            .WithClientOptions(new MqttClientOptionsBuilder().WithClientId("ClientSubscriber").WithTcpServer("localhost", int.Parse(this.TextBoxPort.Text)).WithTls().Build()).Build();
+        var tlsOptions = new MqttClientTlsOptions
+        {
+            UseTls = false,
+            IgnoreCertificateChainErrors = true,
+            IgnoreCertificateRevocationErrors = true,
+            AllowUntrustedCertificates = true
+        };
 
-        this.managedMqttClientSubscriber = new MqttFactory().CreateManagedMqttClient();
-        this.managedMqttClientSubscriber.ApplicationMessageReceivedAsync += this.HandleReceivedApplicationMessage;
+        var options = new MqttClientOptionsBuilder()
+            .WithClientId("ClientSubscriber")
+            .WithTcpServer("localhost", int.Parse(this.TextBoxPort.Text))
+            .WithProtocolVersion(MqttProtocolVersion.V311)
+            .WithTlsOptions(tlsOptions)
+            .WithCleanSession()
+            .WithKeepAlivePeriod(TimeSpan.FromSeconds(5))
+            .Build();
+
+        this.mqttClientSubscriber = new MqttClientFactory().CreateMqttClient();
+        this.mqttClientSubscriber.ApplicationMessageReceivedAsync += this.HandleReceivedApplicationMessage;
         var mqttFilter = new MqttTopicFilterBuilder().WithTopic(this.TextBoxTopic.Text.Trim()).Build();
-        await this.managedMqttClientSubscriber.SubscribeAsync(new List<MqttTopicFilter> { mqttFilter });
-        await this.managedMqttClientSubscriber.StartAsync(options);
+        var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
+            .WithTopicFilter(mqttFilter)
+            .Build();
+        await this.mqttClientSubscriber.SubscribeAsync(subscribeOptions);
+        await this.mqttClientSubscriber.ConnectAsync(options);
     }
 
     /// <summary>
@@ -240,8 +253,7 @@ public partial class Form1 : Form
     /// <param name="eventArgs">The event args.</param>
     private Task HandleReceivedApplicationMessage(MqttApplicationMessageReceivedEventArgs eventArgs)
     {
-        var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {eventArgs.ApplicationMessage.ConvertPayloadToString()} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
-
+        var item = $"Timestamp: {DateTimeOffset.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {eventArgs.ApplicationMessage.ConvertPayloadToString()} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
         this.BeginInvoke((MethodInvoker)delegate { this.TextBoxSubscriber.Text = item + Environment.NewLine + this.TextBoxSubscriber.Text; });
         return Task.CompletedTask;
     }
@@ -275,18 +287,18 @@ public partial class Form1 : Form
         this.BeginInvoke(
             (MethodInvoker)delegate
             {
-                    // Server
-                    this.TextBoxPort.Enabled = this.mqttServer == null;
-                this.ButtonServerStart.Enabled = this.mqttServer == null;
-                this.ButtonServerStop.Enabled = this.mqttServer != null;
+                // Server
+                this.TextBoxPort.Enabled = this.mqttServer is null;
+                this.ButtonServerStart.Enabled = this.mqttServer is null;
+                this.ButtonServerStop.Enabled = this.mqttServer is not null;
 
-                    // Publisher
-                    this.ButtonPublisherStart.Enabled = this.managedMqttClientPublisher == null;
-                this.ButtonPublisherStop.Enabled = this.managedMqttClientPublisher != null;
+                // Publisher
+                this.ButtonPublisherStart.Enabled = this.mqttClientPublisher is null;
+                this.ButtonPublisherStop.Enabled = this.mqttClientPublisher is not null;
 
-                    // Subscriber
-                    this.ButtonSubscriberStart.Enabled = this.managedMqttClientSubscriber == null;
-                this.ButtonSubscriberStop.Enabled = this.managedMqttClientSubscriber != null;
+                // Subscriber
+                this.ButtonSubscriberStart.Enabled = this.mqttClientSubscriber is null;
+                this.ButtonSubscriberStop.Enabled = this.mqttClientSubscriber is not null;
             });
     }
 }
