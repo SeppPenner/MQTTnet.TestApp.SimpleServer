@@ -92,7 +92,11 @@ public partial class Form1 : Form
             var payload = Encoding.UTF8.GetBytes(this.TextBoxPublish.Text);
 
             var message = new MqttApplicationMessageBuilder()
-                .WithTopic(this.TextBoxTopic.Text.Trim()).WithPayload(payload).WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).WithRetainFlag().Build();
+                .WithTopic(this.TextBoxTopic.Text.Trim())
+                .WithPayload(payload)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithRetainFlag()
+                .Build();
 
             if (this.mqttClientPublisher is not null)
             {
@@ -129,6 +133,7 @@ public partial class Form1 : Form
            .WithTlsOptions(tlsOptions)
            .WithCleanSession()
            .WithKeepAlivePeriod(TimeSpan.FromSeconds(5))
+           .WithCredentials("username", "password")
            .Build();
 
         if (options.ChannelOptions is null)
@@ -157,13 +162,14 @@ public partial class Form1 : Form
     /// </summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
-    private void ButtonPublisherStop_Click(object sender, EventArgs e)
+    private async void ButtonPublisherStop_Click(object sender, EventArgs e)
     {
         if (this.mqttClientPublisher is null)
         {
             return;
         }
 
+        await this.mqttClientPublisher.DisconnectAsync();
         this.mqttClientPublisher.Dispose();
         this.mqttClientPublisher = null;
     }
@@ -181,7 +187,7 @@ public partial class Form1 : Form
         }
 
         var options = new MqttServerOptions();
-        options.DefaultEndpointOptions.Port = int.Parse(this.TextBoxPort.Text);
+        options.DefaultEndpointOptions.Port = int.Parse(this.TextBoxPort.Text.Trim());
         options.EnablePersistentSessions = true;
         this.mqttServer = new MqttServerFactory().CreateMqttServer(options);
 
@@ -230,7 +236,7 @@ public partial class Form1 : Form
 
         var options = new MqttClientOptionsBuilder()
             .WithClientId("ClientSubscriber")
-            .WithTcpServer("localhost", int.Parse(this.TextBoxPort.Text))
+            .WithTcpServer("localhost", int.Parse(this.TextBoxPort.Text.Trim()))
             .WithProtocolVersion(MqttProtocolVersion.V311)
             .WithTlsOptions(tlsOptions)
             .WithCleanSession()
@@ -265,7 +271,7 @@ public partial class Form1 : Form
     /// <param name="e">The event args.</param>
     private void TextBoxPort_TextChanged(object sender, EventArgs e)
     {
-        if (int.TryParse(this.TextBoxPort.Text, out _))
+        if (int.TryParse(this.TextBoxPort.Text.Trim(), out _))
         {
             this.port = this.TextBoxPort.Text.Trim();
         }
