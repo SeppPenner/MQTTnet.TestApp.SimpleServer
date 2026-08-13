@@ -40,7 +40,7 @@ folder.
 dotnet build src/MQTTnet.TestApp.SimpleServer.sln
 ```
 
-- Single target framework `net9.0-windows`, no multi-targeting. Windows only, it is Windows Forms.
+- Single target framework `net10.0-windows`, no multi-targeting. Windows only, it is Windows Forms.
 - All build properties live directly in the one `.csproj`. There is **no** `Directory.Build.props`
   in this repository.
 - `TreatWarningsAsErrors` is enabled, so every warning breaks the build, NuGet warnings (`NU****`)
@@ -128,6 +128,11 @@ Do not silently "clean up" these, they are existing behaviour:
 - **`RuntimeIdentifiers win-x64` without a publish.** The property is set in the `.csproj`, but
   nothing in the repository publishes with a RID and the app is framework dependent. A machine that
   runs it needs the Windows Desktop runtime installed.
+- **The commit hash appears twice in the `ProductVersion`.** GitVersion writes an
+  `InformationalVersion` that already ends in `+Branch.master.Sha.<hash>`, and the SDK appends the
+  source revision on top of it, so the result reads `...Sha.<hash>.<hash>`. It has been that way
+  since the move to .NET 8 and it shows up nowhere in the UI, the window title is a fixed string.
+  `IncludeSourceRevisionInInformationalVersion` would switch the second half off.
 - **AppVeyor badge without CI in the repository.** `README.md` links an AppVeyor build that is
   configured outside of this repository. There is no pipeline file here.
 - **`src/MQTTnet.TestApp.SimpleServer.sln.DotSettings`** is tracked and holds nothing but a
