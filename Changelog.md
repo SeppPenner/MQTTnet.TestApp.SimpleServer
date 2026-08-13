@@ -1,5 +1,6 @@
 # Change history
 
+* **Version 1.0.8.0 (2026-08-13)** : Updated Nuget packages, moved to Net 10.0, fixed the server that never listened and the subscriber that subscribed before it connected, added the missing Stop handler of the subscriber, moved the MQTT logic to a service, added tests.
 * **Version 1.0.7.0 (2025-01-07)** : Updated Nuget packages, added audit mode, moved to Net9.0.
 * **Version 1.0.6.0 (2024-01-04)** : Updated nuget packages, moved to Net 8.0.
 * **Version 1.0.5.0 (2022-11-23)** : Updated nuget packages, moved to Net 7.0.
