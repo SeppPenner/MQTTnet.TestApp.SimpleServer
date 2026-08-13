@@ -33,7 +33,6 @@ namespace MQTTnet.TestApp.SimpleServer
 			this.ButtonServerStart = new System.Windows.Forms.Button();
 			this.ButtonServerStop = new System.Windows.Forms.Button();
 			this.label2 = new System.Windows.Forms.Label();
-			this.maskedTextBox1 = new System.Windows.Forms.MaskedTextBox();
 			this.label3 = new System.Windows.Forms.Label();
 			this.TextBoxTopic = new System.Windows.Forms.TextBox();
 			this.label4 = new System.Windows.Forms.Label();
@@ -94,14 +93,6 @@ namespace MQTTnet.TestApp.SimpleServer
 			this.label2.TabIndex = 4;
 			this.label2.Text = "Server";
 			// 
-			// maskedTextBox1
-			// 
-			this.maskedTextBox1.Location = new System.Drawing.Point(0, 0);
-			this.maskedTextBox1.Name = "maskedTextBox1";
-			this.maskedTextBox1.Size = new System.Drawing.Size(100, 23);
-			this.maskedTextBox1.TabIndex = 5;
-			this.maskedTextBox1.Text = "maskedTextBox1";
-			// 
 			// label3
 			// 
 			this.label3.AutoSize = true;
@@ -118,7 +109,6 @@ namespace MQTTnet.TestApp.SimpleServer
 			this.TextBoxTopic.Size = new System.Drawing.Size(470, 23);
 			this.TextBoxTopic.TabIndex = 1;
 			this.TextBoxTopic.Text = "brand/type/group/code";
-			this.TextBoxTopic.TextChanged += new System.EventHandler(this.TextBoxPort_TextChanged);
 			// 
 			// label4
 			// 
@@ -164,7 +154,6 @@ namespace MQTTnet.TestApp.SimpleServer
 			this.TextBoxPublish.Name = "TextBoxPublish";
 			this.TextBoxPublish.Size = new System.Drawing.Size(394, 23);
 			this.TextBoxPublish.TabIndex = 1;
-			this.TextBoxPublish.TextChanged += new System.EventHandler(this.TextBoxPort_TextChanged);
 			// 
 			// ButtonPublish
 			// 
@@ -184,6 +173,7 @@ namespace MQTTnet.TestApp.SimpleServer
 			this.ButtonSubscriberStop.TabIndex = 3;
 			this.ButtonSubscriberStop.Text = "Stop";
 			this.ButtonSubscriberStop.UseVisualStyleBackColor = true;
+			this.ButtonSubscriberStop.Click += new System.EventHandler(this.ButtonSubscriberStop_Click);
 			// 
 			// ButtonSubscriberStart
 			// 
@@ -248,7 +238,6 @@ namespace MQTTnet.TestApp.SimpleServer
 		private System.Windows.Forms.Button ButtonServerStart;
 		private System.Windows.Forms.Button ButtonServerStop;
 		private System.Windows.Forms.Label label2;
-		private System.Windows.Forms.MaskedTextBox maskedTextBox1;
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.TextBox TextBoxTopic;
 		private System.Windows.Forms.Label label4;
